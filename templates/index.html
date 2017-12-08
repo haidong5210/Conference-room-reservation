@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Title</title>
+    <link rel="stylesheet" href="/static/bootstrap-3.3.7-dist/css/bootstrap.min.css">
+    <script src="/static/jquery3.2.1.js"></script>
+</head>
+<body>
+<h1 style="margin-left: 100px">会议室预定</h1>
+<div class="container" style="margin-top: 50px">
+<div class="table-responsive">
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th>会议室</th>
+            {% for meet in meet_time %}
+                <th>{{ meet.1 }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+        {% for boardroom in boardroom_set %}
+         <tr>
+            <th scope="row" >{{ boardroom.title }}</th>
+                 {% for meet in meet_time %}
+                 <td></td>
+                 {% endfor %}
+         </tr>
+        {% endfor %}
+
+
+        </tbody>
+      </table>
+    </div>
+</div>
+</body>
+</html>
