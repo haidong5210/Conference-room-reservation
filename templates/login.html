@@ -1,0 +1,41 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Title</title>
+    <script src="{% static 'js/jquery-1.12.4.min.js' %}"></script>
+</head>
+<body>
+    {% csrf_token %}
+    <p>用户名：<input type="text"></p>
+    <p>密码：<input type="password"></p>
+    <p><input type="submit" value="登陆"></p>
+
+
+    <script>
+        $(function () {
+            $(":submit").click(function () {
+                $.ajax({
+                   url:'/login/',
+                    type:'POST',
+                    data:{
+                       csrfmiddlewaretoken:$("[name='csrfmiddlewaretoken']").val(),
+                        user:$(":text").val(),
+                        password:$(":password").val()
+                    },
+                    success:function (data) {
+                        var login = JSON.parse(data);
+                        if (login['log']){
+                            location.href="/"
+                        }
+                    }
+                })
+                    
+            })
+        })
+    </script>
+</body>
+</html>

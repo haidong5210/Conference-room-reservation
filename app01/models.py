@@ -4,7 +4,7 @@ from django.db import models
 
 
 class User(models.Model):
-    name = models.CharField(max_length=32,verbose_name="用户名")
+    name = models.CharField(max_length=32,verbose_name="用户名",unique=True)
     password = models.CharField(max_length=32,verbose_name="密码")
 
     def __str__(self):
@@ -37,5 +37,8 @@ class Boardroom2Time2user(models.Model):
     boardroom = models.ForeignKey(to="Boardroom",verbose_name="会议室")
     user = models.ForeignKey(to="User")
 
-    def __str__(self):
-        return self.time
+    class Meta:
+        unique_together = (
+            ("meet_time","time","boardroom")
+        )
+
