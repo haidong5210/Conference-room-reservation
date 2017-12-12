@@ -9,6 +9,9 @@
     <link rel="stylesheet" href="{% static 'plugins/bootstrap/css/bootstrap.min.css' %}">
     <link rel="stylesheet" href="{% static 'plugins/datetimepicker/bootstrap-datetimepicker.min.css' %}">
     <style>
+        body{
+            background-image: url("{% static 'im.jpg' %}");
+        }
         .back{
             background-color: darkorange;
         }
@@ -19,6 +22,8 @@
             background-color: #c8e5bc;
             color: red;
         }
+
+        {#遮罩层#}
         .shade {
             position: fixed;
             z-index: 1040;
@@ -32,6 +37,7 @@
             opacity: 0.5;
         }
 
+        {#加载动图#}
         .loading {
             position: fixed;
             z-index: 1050;
@@ -53,7 +59,7 @@
 
 
 
-<div class="container" style="margin-top: 50px">
+<div class="container" style="margin-top: 100px">
 
     <div class="form-group" style="width:250px">
             <label>选择日期：</label>
@@ -84,8 +90,10 @@
                 </tbody>
           </table>
     </div>
-
+<h2>操作方法：</h2>
+<div style="color: red;font-size: 15px">未预定的(即没有颜色的框)可以选择，点击即选，自己预约的会议室可以取消，点击即取消，如果不小心点击到，可以点击恢复颜色即可返回预定！！</div>
 </div>
+
 
 
 
@@ -261,6 +269,7 @@
                 },
                 success:function (data) {
                     if (data["status"]){
+                        alert("操作成功");
                         showbook(date)
                     }else{
                         alert(data["error"])
