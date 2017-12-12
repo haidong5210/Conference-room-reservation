@@ -15,6 +15,10 @@
         .bg{
             background-color: silver;
         }
+        .mySlfe{
+            background-color: #c8e5bc;
+            color: red;
+        }
         .shade {
             position: fixed;
             z-index: 1040;
@@ -60,7 +64,7 @@
                     <span class="glyphicon glyphicon-calendar"></span>
                 </span>
                 <div style="padding: 0 5px;float: left">
-                    <a id="save" href="#" class="btn btn-primary">保存</a>
+                    <a id="save" class="btn btn-primary">保存</a>
                 </div>
             </div>
     </div>
@@ -94,6 +98,7 @@
 
 
 <script src="{% static 'js/jquery-1.12.4.min.js' %}"></script>
+<script src="{% static 'js/jquery.cookie.js' %}"></script>
 <script src="{% static 'plugins/bootstrap/js/bootstrap.min.js' %}"></script>
 <script src="{% static 'plugins/datetimepicker/bootstrap-datetimepicker.min.js' %}"></script>
 <script src="{% static 'plugins/datetimepicker/bootstrap-datetimepicker.zh-CN.js' %}"></script>
@@ -121,9 +126,10 @@
         return fmt;
     };
 
-    $(function () {
+        $(function () {
         initDatepicker();
-        showbook(new Date().Format('yyyy-MM-dd'))
+        showbook(new Date().Format('yyyy-MM-dd'));
+        clickTd();
     });
 
         //展示数据
@@ -136,6 +142,7 @@
                         choice_data:data                //input所选日期
                     },
                     success:function (data) {
+                        $("#tBody").empty();      //加载之前清空原来
                         $('#shade,#loading').addClass('hide');
                         if (data["status"]){
                             $.each(data["data"],function (i,v) {
@@ -161,30 +168,108 @@
 
         //日期插件
         function initDatepicker() {
-        $('#datetimepicker1').datetimepicker({
-            minView: "month",
-            language: "zh-CN",
-            sideBySide: true,
-            todayBtn: true,
-            format: 'yyyy-mm-dd',
-            bootcssVer: 3,
-            startDate: new Date(),
-            {#autoclose: true,#}
-        }).on('changeDate', changeDate);
-    }
+            $('#datetimepicker1').datetimepicker({
+                minView: "month",
+                language: "zh-CN",
+                sideBySide: true,
+                todayBtn: true,
+                format: 'yyyy-mm-dd',
+                bootcssVer: 3,
+                startDate: new Date(),
+                {#autoclose: true,#}
+            }).on('changeDate',changeDate);
+        }
 
         //插件日期变化时间
         function changeDate(ev) {
             var CHOSEN_DATE = ev.date.Format('yyyy-MM-dd');  //自定义的Format方法在上面
-            $("#tBody").empty();
             showbook(CHOSEN_DATE);
         }
 
-
         //绑定选框事件
+        function clickTd() {
+           $("#tBody").on("click",".cli,.mySlfe",function () {
+               if ($(this).hasClass("mySlfe")){
+                   $(this).removeClass("mySlfe");
+                   $(this).addClass("cli");
+                   $(this).addClass("del");
+                   $(this).empty()
+               }else{
+                   if ($(this).hasClass("del")){
+                       $(this).addClass("mySlfe")
+                   }else{
+                        $(this).toggleClass("back");
+                        $(this).removeClass("del")
+                   }
 
+               }
 
-    
+           })
+        }
+
+        //点击完成按钮
+        var sendDate = {};
+        $("#save").click(function () {
+            //找到所有增加的选项
+            var array = [];
+            var date = $(".form-control").val();
+            if (!date){
+                        alert("请输入日期");
+                return false
+                    }
+            var back = $(".back");
+            if (back.length !== 0){
+                back.each(function (i,v) {
+                    var room_id = $(v).attr("room_id");
+                    var time_id = $(v).attr("time_id");
+                   data = {
+                       "user_id":"{{ request.session.user.id }}",
+                       "time":date,
+                       "boardroom_id":room_id,
+                       "meet_time":time_id
+                   };
+                   array.push(data)
+                })
+            }
+            sendDate["add"] = array;
+            //找到所有的修改过自己的选项的选项
+            var del = $(".del");
+            var edit_list = [];
+            if (del.length !== 0){
+                del.each(function (i,v) {
+                   if ($(v).hasClass("mySlfe")){
+                    edit = {}
+                    }else{
+                    edit ={
+                        "meet_time":$(v).attr("time_id"),
+                        "boardroom_id":$(v).attr("room_id"),
+                        "time":date
+                    };
+                    edit_list.push(edit)
+                    }
+                });
+                sendDate["edit"] = edit_list;
+            }else{
+                sendDate["edit"] = []
+            }
+            $.ajax({
+                url:'/index/',
+                type:"POST",
+                headers:{"X-CSRFToken":$.cookie('csrftoken')},
+                data:{
+                  data:JSON.stringify(sendDate)
+                },
+                success:function (data) {
+                    if (data["status"]){
+                        showbook(date)
+                    }else{
+                        alert(data["error"])
+                    }
+                }
+
+            })
+        })
+
 </script>
 </body>
 </html>

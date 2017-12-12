@@ -1,5 +1,5 @@
 import json
-from django.shortcuts import render,HttpResponse
+from django.shortcuts import render,HttpResponse,redirect
 from app01 import models
 from django.http import JsonResponse
 # Create your views here.
@@ -20,13 +20,37 @@ def login(request):
 
 
 def index(request):
-    meet_time = models.Boardroom2Time2user.meetTime
-    room_set = models.Boardroom.objects.all()
-
-    return render(request,"index.html",{"meet_time":meet_time,"room_set":room_set})
+    if request.is_ajax():
+        dict = {"status":True,"error":None}
+        try:
+            data_dict = json.loads(request.POST.get("data"))
+            if not data_dict["add"] and not data_dict["edit"]:
+                dict["status"] = False
+                dict["error"] = "请选择之后提交"
+            if data_dict["add"]:
+                for data in data_dict["add"]:
+                    models.Boardroom2Time2user.objects.create(**data)
+            if data_dict["edit"]:
+                for edit_data in data_dict["edit"]:
+                    models.Boardroom2Time2user.objects.filter(**edit_data,user_id=request.session["user"]["id"]).delete()
+        except Exception as e:
+            dict["status"] = False
+            dict["error"] = str(e)
+        return JsonResponse(dict)
+    else:
+        if request.session.get("user"):
+            meet_time = models.Boardroom2Time2user.meetTime
+            return render(request,"index.html",{"meet_time":meet_time,})
+        else:
+            return redirect('/login/')
 
 
 def book(request):
+    """
+    处理如何在前端显示以选择的会议室
+    :param request:
+    :return:
+    """
     date = request.GET.get("choice_data")
     book_set = models.Boardroom2Time2user.objects.filter(time=date)
     book_dict = {}
@@ -38,8 +62,8 @@ def book(request):
     """
     dict = {
         会议室id:{
-            时间段id：user_id,
-            时间段id：user_id,
+            时间段id：user_name,
+            时间段id：user_name,
            }     
         
     }
@@ -55,7 +79,13 @@ def book(request):
             data_list.append({"text":room.title})
             for time in models.Boardroom2Time2user.meetTime:
                 if room.id in book_dict and time[0] in book_dict[room.id]:
-                    data_list.append({"text":book_dict[room.id][time[0]],"attrs":{"room_id":room.id,"time_id":time[0]},"class":"bg"})
+                    if request.session["user"]["name"] == book_dict[room.id][time[0]]:
+                        data_list.append(
+                        {"text":book_dict[room.id][time[0]],"attrs":{"room_id":room.id,"time_id":time[0]},"class":"mySlfe"})
+                    else:
+                        data_list.append(
+                            {"text": book_dict[room.id][time[0]], "attrs": {"room_id": room.id, "time_id": time[0]},
+                             "class": "bg"})
                 else:
                     data_list.append({"text": "", "attrs": {"room_id": room.id, "time_id": time[0]},"class":"cli"})
             data.append(data_list)
